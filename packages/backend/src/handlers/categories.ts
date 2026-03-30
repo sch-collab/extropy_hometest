@@ -1,0 +1,11 @@
+import "dotenv/config";
+import { APIGatewayProxyHandler } from "aws-lambda";
+import { z } from "zod";
+import { getAuthContext } from "../middleware/auth";
+import { CategoryService } from "../services/CategoryService";
+import { json, noContent } from "../utils/http";
+const service = new CategoryService();
+const createSchema = z.object({ name: z.string().min(1) });
+export const createCategory: APIGatewayProxyHandler = async (event) => { try { const user = getAuthContext(event); const body = createSchema.parse(JSON.parse(event.body || "{}")); return json(201, await service.createCategory(user.userId, body.name)); } catch (error) { return json(400, { error: error instanceof Error ? error.message : "Failed to create category" }); } };
+export const getCategories: APIGatewayProxyHandler = async (event) => { try { const user = getAuthContext(event); return json(200, await service.getCategories(user.userId)); } catch (error) { return json(401, { error: error instanceof Error ? error.message : "Failed to get categories" }); } };
+export const deleteCategory: APIGatewayProxyHandler = async (event) => { try { const user = getAuthContext(event); const categoryId = event.pathParameters?.id; if (!categoryId) return json(400, { error: "Category ID required" }); await service.deleteCategory(user.userId, categoryId); return noContent(); } catch (error) { return json(400, { error: error instanceof Error ? error.message : "Failed to delete category" }); } };

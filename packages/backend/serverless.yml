@@ -1,0 +1,90 @@
+service: expense-tracker-api
+frameworkVersion: "3"
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    JWT_SECRET: ${env:JWT_SECRET, 'change-me'}
+    USERS_TABLE: ${env:USERS_TABLE, 'Users'}
+    EXPENSES_TABLE: ${env:EXPENSES_TABLE, 'Expenses'}
+    CATEGORIES_TABLE: ${env:CATEGORIES_TABLE, 'Categories'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: [dynamodb:PutItem, dynamodb:GetItem, dynamodb:UpdateItem, dynamodb:DeleteItem, dynamodb:Query]
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${env:USERS_TABLE, 'Users'}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${env:USERS_TABLE, 'Users'}/index/*
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${env:EXPENSES_TABLE, 'Expenses'}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${env:EXPENSES_TABLE, 'Expenses'}/index/*
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${env:CATEGORIES_TABLE, 'Categories'}
+functions:
+  signup: { handler: src/handlers/auth.signup, events: [{ http: { path: auth/signup, method: post, cors: true } }] }
+  login: { handler: src/handlers/auth.login, events: [{ http: { path: auth/login, method: post, cors: true } }] }
+  createExpense: { handler: src/handlers/expenses.createExpense, events: [{ http: { path: expenses, method: post, cors: true } }] }
+  getExpenses: { handler: src/handlers/expenses.getExpenses, events: [{ http: { path: expenses, method: get, cors: true } }] }
+  updateExpense: { handler: src/handlers/expenses.updateExpense, events: [{ http: { path: "expenses/{id}", method: put, cors: true } }] }
+  deleteExpense: { handler: src/handlers/expenses.deleteExpense, events: [{ http: { path: "expenses/{id}", method: delete, cors: true } }] }
+  createCategory: { handler: src/handlers/categories.createCategory, events: [{ http: { path: categories, method: post, cors: true } }] }
+  getCategories: { handler: src/handlers/categories.getCategories, events: [{ http: { path: categories, method: get, cors: true } }] }
+  deleteCategory: { handler: src/handlers/categories.deleteCategory, events: [{ http: { path: "categories/{id}", method: delete, cors: true } }] }
+  getReportSummary: { handler: src/handlers/reports.getReportSummary, events: [{ http: { path: reports/summary, method: get, cors: true } }] }
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:USERS_TABLE, 'Users'}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: userId, AttributeType: S }
+          - { AttributeName: email, AttributeType: S }
+        KeySchema:
+          - { AttributeName: userId, KeyType: HASH }
+        GlobalSecondaryIndexes:
+          - IndexName: EmailIndex
+            KeySchema:
+              - { AttributeName: email, KeyType: HASH }
+            Projection: { ProjectionType: ALL }
+    ExpensesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:EXPENSES_TABLE, 'Expenses'}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: userId, AttributeType: S }
+          - { AttributeName: expenseId, AttributeType: S }
+          - { AttributeName: expenseDate, AttributeType: S }
+        KeySchema:
+          - { AttributeName: userId, KeyType: HASH }
+          - { AttributeName: expenseId, KeyType: RANGE }
+        GlobalSecondaryIndexes:
+          - IndexName: UserDateIndex
+            KeySchema:
+              - { AttributeName: userId, KeyType: HASH }
+              - { AttributeName: expenseDate, KeyType: RANGE }
+            Projection: { ProjectionType: ALL }
+    CategoriesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:CATEGORIES_TABLE, 'Categories'}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: userId, AttributeType: S }
+          - { AttributeName: categoryId, AttributeType: S }
+        KeySchema:
+          - { AttributeName: userId, KeyType: HASH }
+          - { AttributeName: categoryId, KeyType: RANGE }
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node20
+    platform: node

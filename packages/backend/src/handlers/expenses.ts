@@ -1,0 +1,13 @@
+import "dotenv/config";
+import { APIGatewayProxyHandler } from "aws-lambda";
+import { z } from "zod";
+import { getAuthContext } from "../middleware/auth";
+import { ExpenseService } from "../services/ExpenseService";
+import { json, noContent } from "../utils/http";
+const service = new ExpenseService();
+const createSchema = z.object({ amount: z.number().positive(), description: z.string().min(1), categoryId: z.string().min(1), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
+const updateSchema = z.object({ amount: z.number().positive().optional(), description: z.string().min(1).optional(), categoryId: z.string().min(1).optional(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() });
+export const createExpense: APIGatewayProxyHandler = async (event) => { try { const user = getAuthContext(event); const body = createSchema.parse(JSON.parse(event.body || "{}")); return json(201, await service.createExpense(user.userId, body)); } catch (error) { return json(400, { error: error instanceof Error ? error.message : "Failed to create expense" }); } };
+export const getExpenses: APIGatewayProxyHandler = async (event) => { try { const user = getAuthContext(event); const { startDate, endDate, categoryId } = event.queryStringParameters || {}; return json(200, await service.getExpenses(user.userId, startDate, endDate, categoryId)); } catch (error) { return json(401, { error: error instanceof Error ? error.message : "Failed to get expenses" }); } };
+export const updateExpense: APIGatewayProxyHandler = async (event) => { try { const user = getAuthContext(event); const expenseId = event.pathParameters?.id; if (!expenseId) return json(400, { error: "Expense ID required" }); const body = updateSchema.parse(JSON.parse(event.body || "{}")); return json(200, await service.updateExpense(user.userId, expenseId, body)); } catch (error) { return json(400, { error: error instanceof Error ? error.message : "Failed to update expense" }); } };
+export const deleteExpense: APIGatewayProxyHandler = async (event) => { try { const user = getAuthContext(event); const expenseId = event.pathParameters?.id; if (!expenseId) return json(400, { error: "Expense ID required" }); await service.deleteExpense(user.userId, expenseId); return noContent(); } catch (error) { return json(400, { error: error instanceof Error ? error.message : "Failed to delete expense" }); } };

@@ -1,0 +1,35 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "serverless offline --stage dev --httpPort 3001",
+    "build": "tsc --noEmit",
+    "deploy": "serverless deploy",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "latest",
+    "@aws-sdk/lib-dynamodb": "latest",
+    "bcryptjs": "latest",
+    "dotenv": "latest",
+    "jsonwebtoken": "latest",
+    "uuid": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "latest",
+    "@types/bcryptjs": "latest",
+    "@types/jest": "latest",
+    "@types/jsonwebtoken": "latest",
+    "@types/node": "latest",
+    "@types/uuid": "latest",
+    "jest": "latest",
+    "serverless": "^3.40.0",
+    "serverless-esbuild": "latest",
+    "serverless-offline": "latest",
+    "ts-jest": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
+  }
+}

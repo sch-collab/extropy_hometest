@@ -1,0 +1,10 @@
+import "dotenv/config";
+import { APIGatewayProxyHandler } from "aws-lambda";
+import { z } from "zod";
+import { AuthService } from "../services/AuthService";
+import { json } from "../utils/http";
+const service = new AuthService();
+const signupSchema = z.object({ email: z.string().email(), password: z.string().min(6) });
+const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
+export const signup: APIGatewayProxyHandler = async (event) => { try { const body = signupSchema.parse(JSON.parse(event.body || "{}")); return json(201, await service.signup(body.email, body.password)); } catch (error) { return json(400, { error: error instanceof Error ? error.message : "Signup failed" }); } };
+export const login: APIGatewayProxyHandler = async (event) => { try { const body = loginSchema.parse(JSON.parse(event.body || "{}")); return json(200, await service.login(body.email, body.password)); } catch (error) { return json(401, { error: error instanceof Error ? error.message : "Login failed" }); } };

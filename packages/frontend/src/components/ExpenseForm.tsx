@@ -1,0 +1,9 @@
+import { useState } from "react";
+import { Button, Grid, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Category } from "../types";
+interface Props { categories: Category[]; onCreate: (payload: { amount: number; description: string; categoryId: string; date: string }) => Promise<void>; }
+export default function ExpenseForm({ categories, onCreate }: Props) {
+  const [amount, setAmount] = useState(""); const [description, setDescription] = useState(""); const [categoryId, setCategoryId] = useState(""); const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const submit = async (e: React.FormEvent) => { e.preventDefault(); await onCreate({ amount: Number(amount), description, categoryId, date }); setAmount(""); setDescription(""); };
+  return <Paper sx={{ p: 2 }}><Typography variant="h6" mb={2}>Add Expense</Typography><form onSubmit={submit}><Grid container spacing={2}><Grid size={{ xs: 12, md: 3 }}><TextField label="Amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} fullWidth required /></Grid><Grid size={{ xs: 12, md: 3 }}><TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} fullWidth required /></Grid><Grid size={{ xs: 12, md: 3 }}><TextField select label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} fullWidth required>{categories.map((c) => <MenuItem key={c.categoryId} value={c.categoryId}>{c.name}</MenuItem>)}</TextField></Grid><Grid size={{ xs: 12, md: 2 }}><TextField type="date" value={date} onChange={(e) => setDate(e.target.value)} fullWidth required /></Grid><Grid size={{ xs: 12, md: 1 }}><Stack justifyContent="center" height="100%"><Button type="submit" variant="contained">Add</Button></Stack></Grid></Grid></form></Paper>;
+}
