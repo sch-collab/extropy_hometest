@@ -1,1 +1,42 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Build / bundler output
+dist/
+build/
+out/
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment (tracked templates only)
+.env
+.env.*
+!.env.example
+
+# Serverless Framework
+.serverless/
+
+# Logs & caches
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.cache/
+
+# Test coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+*.swp
+*.swo
+*~
